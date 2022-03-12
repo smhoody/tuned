@@ -4,55 +4,69 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysis;
 import se.michaelthelin.spotify.requests.data.tracks.GetAudioAnalysisForTrackRequest;
+import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
+import se.michaelthelin.spotify.requests.data.search.simplified.SearchTracksRequest;
+import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.Track;
 import org.apache.hc.core5.http.ParseException;
 
 import java.io.IOException;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 
 public class GetAudioAnalysis {
-    private static final String accessToken = "BQDVFEXih9x9j4oqZoGiNJ5VgHa8G-MFT3wjM0-OIrJxhKVuns9S_BeqPty0J9NU1oQVkHyc5IuGqvEE8t9lwEB08SyU7z3teBYCH5TQZG9HIZAATDcCShk1qtjvptJkJUnWfMA";
-    private static final String id = "01iyCAUm8EvOFqVWYJ3dVX";
+    private static final String CLIENT_ID = "a615c99da01740138c5cd1eeffcc272c";
+    private static final String CLIENT_SECRET = "0c8f5ab92b4a41e6bd082260119ff326";
 
-    private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
-        .setAccessToken(accessToken)
-        .build();
-    private static final GetAudioAnalysisForTrackRequest getAudioAnalysisForTrackRequest = spotifyApi
-        .getAudioAnalysisForTrack(id)
-        .build();
+    private static final SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId(CLIENT_ID).setClientSecret(CLIENT_SECRET).build();
+    
 
+    /**
+     * get properties of a song
+     */
     public static void getAudioAnalysisForTrack_Sync() {
+        final String QUERY = "SAWCE";
+
+        final SearchTracksRequest searchTracksRequest = spotifyApi.searchTracks(QUERY).build();
+
         try {
+            final Paging<Track> track = searchTracksRequest.execute();
+            System.out.println("\tSearch");
+            System.out.println("Results: " + track.getTotal());
+            System.out.println("Track: " + track.getItems()[0].getName() + " by " + track.getItems()[0].getArtists()[0].getName());
+            String id = track.getItems()[0].getId();
+
+            final GetAudioAnalysisForTrackRequest getAudioAnalysisForTrackRequest = spotifyApi.getAudioAnalysisForTrack(id).build();
             final AudioAnalysis audioAnalysis = getAudioAnalysisForTrackRequest.execute();
 
             System.out.println("Track duration: " + audioAnalysis.getTrack().getDuration());
+            System.out.println("Main key: " + audioAnalysis.getTrack().getKey());
+            System.out.println("Tempo: " + audioAnalysis.getTrack().getTempo());
+            //System.out.println("Bars: " + audioAnalysis.getBars().toString());
+
+            
+
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
 
-    // public static void getAudioAnalysisForTrack_Async() {
-    //     try {
-    //         final CompletableFuture<AudioAnalysis> audioAnalysisFuture = getAudioAnalysisForTrackRequest.executeAsync();
-
-    //         // Thread free to do other tasks...
-
-    //         // Example Only. Never block in production code.
-    //         final AudioAnalysis audioAnalysis = audioAnalysisFuture.join();
-
-    //         System.out.println("Track duration: " + audioAnalysis.getTrack().getDuration());
-    //     } catch (CompletionException e) {
-    //         System.out.println("Error: " + e.getCause().getMessage());
-    //     } catch (CancellationException e) {
-    //         System.out.println("Async operation cancelled.");
-    //     }
-    // }
-
+    /**
+     * Use client credentials to retrieve access token
+     */
+    public static void getApiAccess() {
+        final ClientCredentialsRequest clientCredentialsRequest = spotifyApi.clientCredentials().build();
+        try {
+            final ClientCredentials clientCredentials = clientCredentialsRequest.execute();
+      
+            spotifyApi.setAccessToken(clientCredentials.getAccessToken());
+          } catch (IOException | SpotifyWebApiException | ParseException e) {
+            System.out.println("Error: " + e.getMessage());
+          }
+    }
     public static void main(String[] args) {
+        getApiAccess(); //get access token set up
         getAudioAnalysisForTrack_Sync();
-        //getAudioAnalysisForTrack_Async();
     }
 }
 
