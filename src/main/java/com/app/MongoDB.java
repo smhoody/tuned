@@ -11,7 +11,6 @@ package com.app;
 import java.util.ArrayList;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.*;
 import java.net.UnknownHostException;
@@ -76,8 +75,8 @@ public class MongoDB {
         query.put("id", track.getId()); //set the field value you want to search
         DBCursor cursor = tracks.find(query); //perform DB search for Track
         if (cursor.count() == 0) {
-            tracks.insert(convert(track));
-            cursor = null; //document wasnt found in the db, so return null
+            tracks.insert(convert(track)); //document wasnt found in the db, so add it
+            cursor = null;  //return null
         } 
         return cursor;
     }

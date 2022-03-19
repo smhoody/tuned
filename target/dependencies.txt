@@ -1,0 +1,23 @@
+digraph "com.app:tuned:jar:1.0-SNAPSHOT" { 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "junit:junit:jar:4.11:test" ; 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "se.michaelthelin.spotify:spotify-web-api-java:jar:7.0.0:compile" ; 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "org.mongodb:mongo-java-driver:jar:3.12.9:compile" ; 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "org.json:json:jar:20211205:compile" ; 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "org.apache.httpcomponents:httpclient:jar:4.5.13:compile" ; 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "org.apache.httpcomponents.client5:httpclient5:jar:5.1.3:compile" ; 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "com.fasterxml.jackson.core:jackson-databind:jar:2.12.4:compile" ; 
+	"com.app:tuned:jar:1.0-SNAPSHOT" -> "org.mongodb:bson:jar:4.5.0:compile" ; 
+	"junit:junit:jar:4.11:test" -> "org.hamcrest:hamcrest-core:jar:1.3:test" ; 
+	"se.michaelthelin.spotify:spotify-web-api-java:jar:7.0.0:compile" -> "com.google.code.gson:gson:jar:2.8.9:compile" ; 
+	"se.michaelthelin.spotify:spotify-web-api-java:jar:7.0.0:compile" -> "com.neovisionaries:nv-i18n:jar:1.29:compile" ; 
+	"se.michaelthelin.spotify:spotify-web-api-java:jar:7.0.0:compile" -> "org.apache.httpcomponents.client5:httpclient5-cache:jar:5.1.1:compile" ; 
+	"se.michaelthelin.spotify:spotify-web-api-java:jar:7.0.0:compile" -> "org.slf4j:slf4j-api:jar:1.7.32:compile" ; 
+	"org.apache.httpcomponents.client5:httpclient5-cache:jar:5.1.1:compile" -> "org.slf4j:slf4j-nop:jar:1.7.32:compile" ; 
+	"org.apache.httpcomponents:httpclient:jar:4.5.13:compile" -> "org.apache.httpcomponents:httpcore:jar:4.4.13:compile" ; 
+	"org.apache.httpcomponents:httpclient:jar:4.5.13:compile" -> "commons-logging:commons-logging:jar:1.2:compile" ; 
+	"org.apache.httpcomponents:httpclient:jar:4.5.13:compile" -> "commons-codec:commons-codec:jar:1.11:compile" ; 
+	"org.apache.httpcomponents.client5:httpclient5:jar:5.1.3:compile" -> "org.apache.httpcomponents.core5:httpcore5:jar:5.1.3:compile" ; 
+	"org.apache.httpcomponents.client5:httpclient5:jar:5.1.3:compile" -> "org.apache.httpcomponents.core5:httpcore5-h2:jar:5.1.3:compile" ; 
+	"com.fasterxml.jackson.core:jackson-databind:jar:2.12.4:compile" -> "com.fasterxml.jackson.core:jackson-annotations:jar:2.12.4:compile" ; 
+	"com.fasterxml.jackson.core:jackson-databind:jar:2.12.4:compile" -> "com.fasterxml.jackson.core:jackson-core:jar:2.12.4:compile" ; 
+ } 

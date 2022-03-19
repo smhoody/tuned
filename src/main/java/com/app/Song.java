@@ -1,3 +1,10 @@
+/**
+ * Object for storing song attributes
+ * 
+ * @author Steven Hoodikoff
+ * @date 03/17/2022
+ */
+
 package com.app;
 
 import java.lang.StringBuilder;
