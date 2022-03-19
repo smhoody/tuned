@@ -90,12 +90,13 @@ public class Tuned {
     /**
      * Search for tracks similar to the track given
      * @param track
+     * @return ArrayList of Songs
      */
     public static ArrayList<Song> searchTracks(Song track) {
         ArrayList<Song> songs = new ArrayList<Song>();
         try{ 
-            MongoDB db = new MongoDB();
-            songs = db.searchDB(track);
+            DataStore ds = new DataStore();
+            songs = ds.searchDB(track); //search local database for matches with query song
             
         } catch(UnknownHostException e) {
             System.out.println(e.getMessage());
@@ -148,7 +149,7 @@ public class Tuned {
                         " \nSpeechiness: " + audioFeatures.getSpeechiness() +
                         " \nValence: " + audioFeatures.getValence());
         System.out.println("\n\n");
-        for (TrackSimplified t : recommendations.getTracks()) {
+        for (TrackSimplified t : recommendations.getTracks()) { //loop through spotify recommended tracks
             System.out.println("\nName: " + t.getName() + "\nURL: " + t.getExternalUrls());
         }
     }
@@ -158,12 +159,11 @@ public class Tuned {
      * Use client credentials to retrieve access token
      */
     public static void getApiAccess() {
-        
         final ClientCredentialsRequest clientCredentialsRequest = spotifyApi.clientCredentials().build();
         try {
             final ClientCredentials clientCredentials = clientCredentialsRequest.execute();
       
-            spotifyApi.setAccessToken(clientCredentials.getAccessToken());
+            spotifyApi.setAccessToken(clientCredentials.getAccessToken()); //get and set access token
           } catch (IOException | SpotifyWebApiException | ParseException e) {
             System.out.println("Error: " + e.getMessage());
           }
@@ -177,9 +177,9 @@ public class Tuned {
      */
     public static String getCredentials(String type) {
         String value = "";
-        File folder = new File(".");
+        File folder = new File("."); //open current folder
         File infile = new File(folder.getAbsolutePath() + "/util/credentials.txt");
-        
+
         if (!infile.exists()) {
             System.out.println("Credentials file not found");
             System.exit(0);
@@ -191,22 +191,20 @@ public class Tuned {
             
             switch(type) {
                 case "id":  st.nextToken(); //skip "Client ID: "
-                            value = st.nextToken();
+                            value = st.nextToken(); //read client id
                             break;
                 case "secret":  line = scan.nextLine();
                                 st = new StringTokenizer(line, ":");
                                 st.nextToken();
-                                value = st.nextToken();
+                                value = st.nextToken(); //read client secret
                                 break;
-            }
-
+            }//end switch
             scan.close();
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        System.out.println(value);
-        return value;
-    }
-    
-}
 
+        return value;
+    }//end getCredentials()
+    
+}//end class

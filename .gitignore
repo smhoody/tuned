@@ -1,2 +1,4 @@
 /util/credentials.txt
 pom.xml
+/target
+.vscode

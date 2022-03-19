@@ -16,13 +16,13 @@ import com.mongodb.*;
 import java.net.UnknownHostException;
 
 
-public class MongoDB {
+public class DataStore {
     private static MongoClient mongoClient;
     private static DB database;
     private static DBCollection tracks;
 
 
-    public MongoDB() throws UnknownHostException {
+    public DataStore() throws UnknownHostException {
         mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
         database = mongoClient.getDB("Results");
         tracks = database.getCollection("Tracks");
