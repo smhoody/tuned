@@ -10,28 +10,55 @@ package com.app;
 
 import java.util.ArrayList;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.*;
-import java.net.UnknownHostException;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoCursor;
+// import com.mongodb.client.model.Projections;
+// import com.mongodb.client.model.Sorts;
+// import com.mongodb.ConnectionString;
+// import com.mongodb.MongoClientSettings;
+// import com.mongodb.ServerApi;
+// import com.mongodb.ServerApiVersion;
 
+import static com.mongodb.client.model.Filters.eq;
 
+//mongodb+srv://smhoody:database-1@cluster0.mjenf.mongodb.net/Tuned?retryWrites=true&w=majority
 public class DataStore {
+    //private static String uri = "mongodb+srv://smhoody:database-1@cluster0.mjenf.mongodb.net/Tuned";
     private static MongoClient mongoClient;
-    private static DB database;
-    private static DBCollection tracks;
+    private static MongoCollection<Document> tracks;
 
+    
+    
+    public DataStore() {
+        // mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
+        // database = mongoClient.getDB("Results");
+        // tracks = database.getCollection("Tracks");
+        
+        // ConnectionString connectionString = new ConnectionString(uri);
+        // MongoClientSettings settings = MongoClientSettings.builder()
+        //     .applyConnectionString(connectionString)
+        //     // .serverApi(ServerApi.builder()
+        //     //     .version(ServerApiVersion.V1)
+        //     //     .build())
+        //     .build();
+        // mongoClient = MongoClients.create(settings);
 
-    public DataStore() throws UnknownHostException {
-        mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
-        database = mongoClient.getDB("Results");
+        //to use the altas cluster, just replace the string literal with the connection string
+        mongoClient = MongoClients.create("mongodb://localhost:27017");
+        MongoDatabase database = mongoClient.getDatabase("Tuned");
         tracks = database.getCollection("Tracks");
-        // Song song = new Song();
-        // song.setId("id123");
-        // song.setTempo(12f);
-        // song.setKey(3);   
-        // song.setDuration(239f);
-        // tracks.insert(convert(song));
+
+        
+        
     }
 
 
@@ -42,23 +69,23 @@ public class DataStore {
      */
     public static ArrayList<Song> searchDB(Song track) {
         ArrayList<Song> songs = new ArrayList<Song>();
-        DBCursor cursor = checkTrackMatch(track);
+        MongoCursor<Document> cursor = checkTrackMatch(track);
 
         if (cursor != null) { //if the query was found in the db
             while (cursor.hasNext()) { //loop through documents
-                DBObject next = cursor.next();
-                next.removeField("_id"); //remove _id cuz it wont go into a Song object
-                
+                Document next = cursor.next();
+                next.remove("_id"); //remove _id cuz it wont go into a Song object
+                //System.out.println(next.toJson());
                 ObjectMapper mapper = new ObjectMapper();
                 try {
                     //convert document to Song object
-                    Song song = mapper.readValue(next.toString(), Song.class);
+                    Song song = mapper.readValue(next.toJson(), Song.class);
                     songs.add(song);
                 } catch (JsonProcessingException e) {
                     System.out.println(e.getMessage());
                 }
             }//end while
-        
+            cursor.close();
         }//end if
 
         return songs;
@@ -70,12 +97,11 @@ public class DataStore {
      * @param track
      * @return DBCursor  (null if nothing found)
      */
-    public static DBCursor checkTrackMatch(Song track) {
-        BasicDBObject query = new BasicDBObject();
-        query.put("id", track.getId()); //set the field value you want to search
-        DBCursor cursor = tracks.find(query); //perform DB search for Track
-        if (cursor.count() == 0) {
-            tracks.insert(convert(track)); //document wasnt found in the db, so add it
+    public static MongoCursor<Document> checkTrackMatch(Song track) {
+        MongoCursor<Document> cursor = tracks.find().iterator(); //perform DB search for Track
+        if (!cursor.hasNext()) {
+            tracks.insertOne(convert(track)); //document wasnt found in the db, so add it
+            System.out.println("Inserted" + track.toString());
             cursor = null;  //return null
         } 
         return cursor;
@@ -86,8 +112,8 @@ public class DataStore {
      * @param track
      * @return DBOject
      */
-    public static DBObject convert(Song track) {
-        return new BasicDBObject("id", track.getId())
+    public static Document convert(Song track) {
+        return new Document("id", track.getId())
                         .append("name", track.getName())
                         .append("artist", track.getArtist())
                         .append("duration", track.getDuration())
