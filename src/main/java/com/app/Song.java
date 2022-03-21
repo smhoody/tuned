@@ -9,6 +9,10 @@ package com.app;
 
 import java.lang.StringBuilder;
 
+import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysis;
+import se.michaelthelin.spotify.model_objects.specification.AudioFeatures;
+import se.michaelthelin.spotify.model_objects.specification.Track;
+
 public class Song {
     private String id = "";
     private String name = "";
@@ -28,6 +32,22 @@ public class Song {
 
     }
 
+    /**
+     * Overloaded constructor using custom properties
+     * @param id
+     * @param name
+     * @param artist
+     * @param duration
+     * @param tempo
+     * @param key
+     * @param mode
+     * @param danceability
+     * @param energy
+     * @param speechiness
+     * @param valence
+     * @param acousticness
+     * @param instrumentalness
+     */
     public Song(String id, String name, String artist, Float duration, Float tempo, Integer key, int mode,
                 Float danceability, Float energy, Float speechiness,
                 Float valence, Float acousticness, Float instrumentalness) 
@@ -46,6 +66,30 @@ public class Song {
         this.acousticness = acousticness;
         this.instrumentalness = instrumentalness;
     }
+
+    
+    /**
+     * Overloaded constructor using Track, AudioAnalysis, AudioFeatures
+     * @param track
+     * @param audioAnalysis
+     * @param audioFeatures
+     */
+    public Song(Track track, AudioAnalysis audioAnalysis, AudioFeatures audioFeatures) {
+        this.id = track.getId();
+        this.name = track.getName();
+        this.artist = track.getArtists()[0].getName();
+        this.duration = audioAnalysis.getTrack().getDuration();
+        this.tempo = audioAnalysis.getTrack().getTempo();
+        this.key = audioAnalysis.getTrack().getKey();
+        this.mode = audioFeatures.getMode().getType();
+        this.danceability = audioFeatures.getDanceability();
+        this.energy = audioFeatures.getEnergy();
+        this.speechiness = audioFeatures.getSpeechiness();
+        this.valence = audioFeatures.getValence();
+        this.acousticness = audioFeatures.getAcousticness();
+        this.instrumentalness = audioFeatures.getInstrumentalness();
+    }
+
 
 
     // ACCESSORS
@@ -155,6 +199,12 @@ public class Song {
 
     public void setInstrumentalness(Float instrumentalness) {
         this.instrumentalness = instrumentalness;
+    }
+
+    public boolean equals(Song song) {
+
+
+        return true;
     }
 
     public String toString() {

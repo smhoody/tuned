@@ -22,9 +22,11 @@ import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
 import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysis;
+import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysisSection;
+import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysisSegment;
+
 import org.apache.hc.core5.http.ParseException;
 
-import java.net.UnknownHostException;
 import java.io.IOException;
 import java.io.File;
 import java.util.ArrayList;
@@ -82,7 +84,7 @@ public class Util {
      * @return Song  Song object
      */
     public static Song getTrackAudioProperties(Track track) {
-        Song song = new Song();
+        Song song = null;
         String id = track.getId(); //used to search song audio properties
         
         try {
@@ -92,9 +94,22 @@ public class Util {
             final AudioAnalysis audioAnalysis = getAudioAnalysis.execute();
             final AudioFeatures audioFeatures = getAudioFeatures.execute();
 
-            song = convertToSong(track, audioAnalysis, audioFeatures); //create song object
+            song = new Song(track, audioAnalysis, audioFeatures); //create song object
             outputResults(track, audioAnalysis, audioFeatures); //print audio properties of song
             
+            AudioAnalysisSection[] sections = audioAnalysis.getSections();
+            System.out.println("Sections: " + sections.length);
+            for (AudioAnalysisSection s : sections)
+                System.out.println("Section Key: " + s.getKey()
+                                +  "\nSection Tempo: " + s.getTempo());
+
+            AudioAnalysisSegment[] segments = audioAnalysis.getSegments();
+            System.out.println(segments.length);
+            // for (AudioAnalysisSegment s : segments)
+            //     System.out.println("Segment Loudness: " + s.getLoudnessMax()
+            //                     + "\nSegment Pitches: " + s.getPitches()
+            //                     + "\nSegment Timbre: " + s.getTimbre());
+
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             System.out.println("Error: " + e.getMessage());
         }
@@ -115,7 +130,7 @@ public class Util {
             final Recommendations recommendations = getRecRequest.execute();
             TrackSimplified[] simpleTracks = recommendations.getTracks();
             for (TrackSimplified t : simpleTracks) {
-                songs.add(getTrackAudioProperties(searchTrack("", t.getId()))); //Convert a Spotify Track object into a Song object
+                songs.add(getTrackAudioProperties(searchTrack("", t.getId()))); //Convert a Spotify Track object into a Song object and add to list
             }
 
         } catch (IOException | SpotifyWebApiException | ParseException e) {
@@ -126,37 +141,13 @@ public class Util {
 
 
     /**
-     * Create a Song object from the attributes of the song
-     * @param track Track object
-     * @param audioAnalysis AudioAnalysis object
-     * @param audioFeatures AudioFeatures object
-     * @return Song
-     */
-    public static Song convertToSong(Track track, AudioAnalysis audioAnalysis, AudioFeatures audioFeatures) {
-        Song song = new Song(track.getId(), track.getName(),
-                                track.getArtists()[0].getName(),
-                                audioAnalysis.getTrack().getDuration(),
-                                audioAnalysis.getTrack().getTempo(),
-                                audioAnalysis.getTrack().getKey(),
-                                audioFeatures.getMode().getType(),
-                                audioFeatures.getDanceability(),
-                                audioFeatures.getEnergy(),
-                                audioFeatures.getSpeechiness(),
-                                audioFeatures.getValence(),
-                                audioFeatures.getAcousticness(),
-                                audioFeatures.getInstrumentalness());
-        return song;
-    }
-
-
-    /**
      * Print the attributes of the query song and recommendations
      * @param audioAnalysis
      * @param audioFeatures
      * @param recommendations
      */
     public static void outputResults(Track track, AudioAnalysis audioAnalysis, AudioFeatures audioFeatures) {
-        System.out.println("\tSearch");
+        System.out.println("\n\tSearch");
         System.out.println("Track: " + track.getName() + " by " + track.getArtists()[0].getName());
         System.out.println("Track duration: " + audioAnalysis.getTrack().getDuration() +
                         " \nMain key: " + audioAnalysis.getTrack().getKey() +
@@ -165,7 +156,7 @@ public class Util {
                         " \nEnergy: " + audioFeatures.getEnergy() + 
                         " \nSpeechiness: " + audioFeatures.getSpeechiness() +
                         " \nValence: " + audioFeatures.getValence());
-        System.out.println("\n\n");
+        System.out.println("\n");
     }
 
 
@@ -192,7 +183,7 @@ public class Util {
     public static String getCredentials(String type) {
         String value = "";
         File folder = new File("."); //open current folder
-        File infile = new File(folder.getAbsolutePath() + "/util/spotify-credentials.txt");
+        File infile = new File(folder.getAbsolutePath() + "/src/main/resources/spotify-credentials.txt");
 
         if (!infile.exists()) {
             System.out.println("Credentials file not found");

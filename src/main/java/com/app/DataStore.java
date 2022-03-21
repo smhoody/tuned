@@ -11,11 +11,9 @@ package com.app;
 import java.util.ArrayList;
 
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -30,9 +28,9 @@ import com.mongodb.client.MongoCursor;
 
 import static com.mongodb.client.model.Filters.eq;
 
-//mongodb+srv://smhoody:database-1@cluster0.mjenf.mongodb.net/Tuned?retryWrites=true&w=majority
+//mongodb+srv://smhoody:@cluster0.mjenf.mongodb.net/Tuned?retryWrites=true&w=majority
 public class DataStore {
-    //private static String uri = "mongodb+srv://smhoody:database-1@cluster0.mjenf.mongodb.net/Tuned";
+    //private static String uri = "mongodb+srv://smhoody:@cluster0.mjenf.mongodb.net/Tuned";
     private static MongoClient mongoClient;
     private static MongoCollection<Document> tracks;
 
@@ -67,7 +65,7 @@ public class DataStore {
      * @param track
      * @return ArrayList<Song>  (list of similar tracks)
      */
-    public static ArrayList<Song> searchDB(Song track) {
+    public ArrayList<Song> searchDB(Song track) {
         ArrayList<Song> songs = new ArrayList<Song>();
         MongoCursor<Document> cursor = checkTrackMatch(track);
 
@@ -97,7 +95,7 @@ public class DataStore {
      * @param track
      * @return DBCursor  (null if nothing found)
      */
-    public static MongoCursor<Document> checkTrackMatch(Song track) {
+    public MongoCursor<Document> checkTrackMatch(Song track) {
         MongoCursor<Document> cursor = tracks.find().iterator(); //perform DB search for Track
         if (!cursor.hasNext()) {
             tracks.insertOne(convert(track)); //document wasnt found in the db, so add it
@@ -112,7 +110,7 @@ public class DataStore {
      * @param track
      * @return DBOject
      */
-    public static Document convert(Song track) {
+    public Document convert(Song track) {
         return new Document("id", track.getId())
                         .append("name", track.getName())
                         .append("artist", track.getArtist())

@@ -16,14 +16,14 @@ public class Tuned {
 
     public static void main(String[] args) {
         Util.getApiAccess(); //get access token set up
-        Track queryTrack = Util.searchTrack("SAWCE", ""); //
+        Track queryTrack = Util.searchTrack("ORANGATANGABANGIN", ""); //
         Song song = Util.getTrackAudioProperties(queryTrack);
-        ArrayList<Song> songs = Util.getRecommendations(song);
+        //ArrayList<Song> songs = Util.getRecommendations(song);
         //ArrayList<Song> songs = searchTracks(song);
         
-        for (Song s : songs) {
-            System.out.println(s);
-        }
+        // for (Song s : songs) {
+        //     System.out.println(s);
+        // }
     }
 
 
