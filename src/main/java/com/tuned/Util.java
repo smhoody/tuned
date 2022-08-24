@@ -1,0 +1,222 @@
+/**
+ * Utility functions for Tuned
+ * 
+ * @author Steven Hoodikoff
+ * @date 03/20/2022
+ */
+
+package com.tuned;
+
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.requests.data.tracks.GetAudioAnalysisForTrackRequest;
+import se.michaelthelin.spotify.requests.data.tracks.GetAudioFeaturesForTrackRequest;
+import se.michaelthelin.spotify.requests.data.tracks.GetTrackRequest;
+import se.michaelthelin.spotify.requests.data.browse.GetRecommendationsRequest;
+import se.michaelthelin.spotify.requests.data.search.simplified.SearchTracksRequest;
+import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
+import se.michaelthelin.spotify.model_objects.specification.AudioFeatures;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.Recommendations;
+import se.michaelthelin.spotify.model_objects.specification.Track;
+import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
+import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
+import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysis;
+import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysisSection;
+import se.michaelthelin.spotify.model_objects.miscellaneous.AudioAnalysisSegment;
+
+import org.apache.hc.core5.http.ParseException;
+
+import java.io.IOException;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+import java.util.Arrays;
+
+import org.json.simple.JSONArray;
+
+import com.google.gson.JsonArray;
+
+
+public class Util {
+    private static final String CLIENT_ID = getCredentials("id");
+    private static final String CLIENT_SECRET = getCredentials("secret");
+    private static final SpotifyApi SPOTIFY_API = new SpotifyApi.Builder().setClientId(CLIENT_ID).setClientSecret(CLIENT_SECRET).build();
+    
+    
+    public Util() {
+
+    }
+
+
+    /**
+     * Create API object instance
+     * @return SpotifyApi
+     */
+    public static SpotifyApi getSpotifyApi() {
+        return SPOTIFY_API;
+    }
+
+    /**
+     * Search Spotify for song with name of song
+     * @param name String name of song (leave empty if searching by ID)
+     * @param id Spotify ID of the song (leave empty if searching by name)
+     * @return Track
+     */
+    public static Track searchTrack(String name, String id) {
+        Track track = null;
+
+        try {
+            //if the id was given, search by id
+            if (id.length() != 0) {
+                GetTrackRequest getTrackRequest = SPOTIFY_API.getTrack(id).build();
+                track = getTrackRequest.execute();
+            } else { //else the track name was given
+                SearchTracksRequest searchTracksRequest = SPOTIFY_API.searchTracks(name).build();
+                Paging<Track> result = searchTracksRequest.execute(); //perform search, returns list of Tracks
+                track = result.getItems()[0]; //get first Track
+            }
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    
+        return track;
+    }
+
+    /**
+     * get properties of a track and instantiate a Song object
+     * @param track  Track object
+     * @return Song  Song object
+     */
+    public static Song getTrackAudioProperties(Track track) {
+        Song song = null;
+        String id = track.getId(); //used to search song audio properties
+        
+        try {
+            GetAudioAnalysisForTrackRequest getAudioAnalysis = SPOTIFY_API.getAudioAnalysisForTrack(id).build();
+            GetAudioFeaturesForTrackRequest getAudioFeatures = SPOTIFY_API.getAudioFeaturesForTrack(id).build();
+            
+            AudioAnalysis audioAnalysis = getAudioAnalysis.execute();
+            AudioFeatures audioFeatures = getAudioFeatures.execute();
+
+            song = new Song(track, audioAnalysis, audioFeatures); //create song object
+            outputResults(track, audioAnalysis, audioFeatures); //print audio properties of song
+            
+            AudioAnalysisSegment[] segments = audioAnalysis.getSegments();
+            System.out.println(segments.length);
+            // for (AudioAnalysisSegment s : segments)
+            //     System.out.println("Segment Loudness: " + s.getLoudnessMax()
+            //                     + "\nSegment Pitches: " + Arrays.toString(s.getPitches())
+            //                     + "\nSegment Timbre: " + Arrays.toString(s.getTimbre()));
+
+            AudioAnalysisSection[] sections = audioAnalysis.getSections();
+            //System.out.println("Sections: " + sections.length);
+            //for (AudioAnalysisSection s : sections)
+            //    System.out.println("Section Key: " + s.getKey() + "\nSection Tempo: " + s.getTempo());
+
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+
+        return song;
+    }
+
+
+    /**
+     * Get Spotify recommendations from query song
+     * @param song Song object
+     * @return ArrayList<Song> 
+     */
+    public static ArrayList<Song> getRecommendations(Song song) {
+        ArrayList<Song> songs = new ArrayList<Song>();
+        
+        try {
+            GetRecommendationsRequest getRecRequest = SPOTIFY_API.getRecommendations().seed_tracks(song.getId()).build();
+            Recommendations recommendations = getRecRequest.execute();
+            TrackSimplified[] simpleTracks = recommendations.getTracks();
+            for (TrackSimplified t : simpleTracks) {
+                songs.add(getTrackAudioProperties(searchTrack("", t.getId()))); //Convert a Spotify Track object into a Song object and add to list
+            }
+
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+        return songs;
+    }
+
+
+    /**
+     * Print the attributes of the query song and recommendations
+     * @param audioAnalysis
+     * @param audioFeatures
+     * @param recommendations
+     */
+    public static void outputResults(Track track, AudioAnalysis audioAnalysis, AudioFeatures audioFeatures) {
+        System.out.println("\n\tSearch");
+        System.out.println("Track: " + track.getName() + " by " + track.getArtists()[0].getName());
+        System.out.println("Track duration: " + audioAnalysis.getTrack().getDuration() +
+                        " \nMain key: " + audioAnalysis.getTrack().getKey() +
+                        " \nTempo: " + audioAnalysis.getTrack().getTempo() +
+                        " \nDanceability: " + audioFeatures.getDanceability() +
+                        " \nEnergy: " + audioFeatures.getEnergy() + 
+                        " \nSpeechiness: " + audioFeatures.getSpeechiness() +
+                        " \nValence: " + audioFeatures.getValence());
+        System.out.println("\n");
+    }
+
+
+    /**
+     * Use client credentials to retrieve access token
+     */
+    public static void getApiAccess() {
+        ClientCredentialsRequest clientCredentialsRequest = SPOTIFY_API.clientCredentials().build();
+        try {
+            ClientCredentials clientCredentials = clientCredentialsRequest.execute();
+      
+            SPOTIFY_API.setAccessToken(clientCredentials.getAccessToken()); //get and set access token
+          } catch (IOException | SpotifyWebApiException | ParseException e) {
+            System.out.println("Error: " + e.getMessage());
+          }
+    }
+
+
+    /**
+     * Read client credentials
+     * @param type ('id' or 'secret')
+     * @return String (client id or secret)
+     */
+    public static String getCredentials(String type) {
+        String value = "";
+        File folder = new File("."); //open current folder
+        File infile = new File(folder.getAbsolutePath() + "/src/main/resources/spotify-credentials.txt");
+
+        if (!infile.exists()) {
+            System.out.println("Credentials file not found");
+            System.exit(0);
+        }
+        try {
+            Scanner scan = new Scanner(infile);
+            String line = scan.nextLine();
+            StringTokenizer st = new StringTokenizer(line, ":");
+            
+            switch(type) {
+                case "id":  st.nextToken(); //skip "Client ID: "
+                            value = st.nextToken(); //read client id
+                            break;
+                case "secret":  line = scan.nextLine();
+                                st = new StringTokenizer(line, ":");
+                                st.nextToken();
+                                value = st.nextToken(); //read client secret
+                                break;
+            }//end switch
+            scan.close();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return value;
+    }//end getCredentials()
+
+
+}
